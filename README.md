@@ -1,6 +1,6 @@
 # Example Docker app with GitLab CI using GitLab Container registry
 
-## CI Pipeline Description
+## CI/CD Pipeline Description
 
 Create/update on merge request
 - Build image
@@ -19,15 +19,9 @@ Tag
 - Tag image with new tag
 - Deploy to production
 
+Manual deploy from non-master branch to staging
+
+Manual deploy from master branch to production
+
 ## Note
 This requires GitLab Runner using Docker Executor in Privileged mode.
-
-```
-[[runners]]
-  name = "runner"
-  url = "https://gitlab.com/ci"
-  token = "TOKEN"
-  executor = "docker"
-  [runners.docker]
-    privileged = true
-```
