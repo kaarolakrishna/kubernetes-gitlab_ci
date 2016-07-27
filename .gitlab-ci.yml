@@ -66,11 +66,18 @@ release-master:
 auto-deploy-master:
   stage: staging
   environment: staging
+  before_script:
+    - sudo apt-get update && sudo apt-get install google-cloud-sdk
+    - sudo gcloud --quiet components update
+    - sudo gcloud --quiet components update kubectl
+    - echo $GCLOUD_SERVICE_KEY | base64 --decode -i > ~/gcloud-service-key.json
+    - sudo gcloud auth activate-service-account --key-file ~/gcloud-service-key.json
+    - sudo gcloud config set project $PROJECT_NAME
+    - sudo gcloud --quiet config set container/cluster $CLUSTER_NAME
+    - sudo gcloud config set compute/zone ${CLOUDSDK_COMPUTE_ZONE}
+    - sudo gcloud --quiet container clusters get-credentials $CLUSTER_NAME
   script:
-    - docker login --username=_ --password=$HEROKU_AUTH_TOKEN registry.heroku.com
-    - docker pull $CI_REGISTRY_IMAGE:$CI_BUILD_REF
-    - docker tag $CI_REGISTRY_IMAGE:$CI_BUILD_REF registry.heroku.com/$HEROKU_STAGING_APP/web
-    - docker push registry.heroku.com/$HEROKU_STAGING_APP/web
+    - kubectl patch deployment $STAGING_SERVICE_NAME -p '{"spec":{"template":{"spec":{"containers":[{"name":"'"$STAGING_SERVICE_NAME"'","image":"'"$CI_REGISTRY_IMAGE:$CI_BUILD_REF"'"}]}}}}'
   only:
     - master
 

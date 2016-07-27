@@ -10,6 +10,5 @@ COPY . /usr/src/app
 RUN adduser -D myuser
 USER myuser
 
-ENV PORT 80
-EXPOSE 80
+EXPOSE 5000
 CMD [ "npm", "start" ]
