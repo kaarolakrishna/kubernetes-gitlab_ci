@@ -10,5 +10,5 @@ COPY . /usr/src/app
 RUN adduser -D myuser
 USER myuser
 
-EXPOSE 80
+EXPOSE 5000
 CMD [ "npm", "start" ]
