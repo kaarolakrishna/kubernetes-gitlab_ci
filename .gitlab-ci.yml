@@ -63,11 +63,10 @@ release-master:
   only:
     - master
 
+# Depends on CLOUDSDK_CORE_PROJECT, CLOUDSDK_CONTAINER_CLUSTER, and CLOUDSDK_COMPUTE_ZONE being set
 .gcloud: &gcloud
   - echo $GCLOUD_SERVICE_KEY | base64 --decode -i > ~/gcloud-service-key.json
   - gcloud auth activate-service-account --key-file ~/gcloud-service-key.json
-  - gcloud config set project $PROJECT_NAME
-  - gcloud --quiet config set container/cluster $CLUSTER_NAME
   - gcloud --quiet container clusters get-credentials $CLUSTER_NAME
 
 .prod_deploy: &prod_deploy
