@@ -63,41 +63,41 @@ release-master:
   only:
     - master
 
+.gcloud: &gcloud
+  - echo $GCLOUD_SERVICE_KEY | base64 --decode -i > ~/gcloud-service-key.json
+  - gcloud auth activate-service-account --key-file ~/gcloud-service-key.json
+  - gcloud config set project $PROJECT_NAME
+  - gcloud --quiet config set container/cluster $CLUSTER_NAME
+  - gcloud --quiet container clusters get-credentials $CLUSTER_NAME
+
+.prod_deploy: &prod_deploy
+  - kubectl patch deployment $PRODUCTION_SERVICE_NAME -p '{"spec":{"template":{"spec":{"containers":[{"name":"'"$PRODUCTION_SERVICE_NAME"'","image":"'"$CI_REGISTRY_IMAGE:$CI_BUILD_REF"'"}]}}}}'
+
+.staging_deploy: &staging_deploy
+  - kubectl patch deployment $STAGING_SERVICE_NAME -p '{"spec":{"template":{"spec":{"containers":[{"name":"'"$STAGING_SERVICE_NAME"'","image":"'"$CI_REGISTRY_IMAGE:$CI_BUILD_REF"'"}]}}}}'
+
 auto-deploy-master:
   image: google/cloud-sdk
   stage: staging
   environment: staging
-  before_script:
-    - echo $GCLOUD_SERVICE_KEY | base64 --decode -i > ~/gcloud-service-key.json
-    - gcloud auth activate-service-account --key-file ~/gcloud-service-key.json
-    - gcloud config set project $PROJECT_NAME
-    - gcloud --quiet config set container/cluster $CLUSTER_NAME
-    - gcloud config set compute/zone ${CLOUDSDK_COMPUTE_ZONE}
-    - gcloud --quiet container clusters get-credentials $CLUSTER_NAME
-  script:
-    - kubectl patch deployment $STAGING_SERVICE_NAME -p '{"spec":{"template":{"spec":{"containers":[{"name":"'"$STAGING_SERVICE_NAME"'","image":"'"$CI_REGISTRY_IMAGE:$CI_BUILD_REF"'"}]}}}}'
+  before_script: *gcloud
+  script: *staging_deploy
   only:
     - master
 
 auto-deploy-tags:
   stage: production
   environment: production
-  script:
-    - docker login --username=_ --password=$HEROKU_AUTH_TOKEN registry.heroku.com
-    - docker pull $CI_REGISTRY_IMAGE:$CI_BUILD_REF
-    - docker tag $CI_REGISTRY_IMAGE:$CI_BUILD_REF registry.heroku.com/$HEROKU_PROD_APP/web
-    - docker push registry.heroku.com/$HEROKU_PROD_APP/web
+  before_script: *gcloud
+  script: *prod_deploy
   only:
     - tags
 
 deploy to staging:
   stage: staging
   environment: staging
-  script:
-    - docker login --username=_ --password=$HEROKU_AUTH_TOKEN registry.heroku.com
-    - docker pull $CI_REGISTRY_IMAGE:$CI_BUILD_REF
-    - docker tag $CI_REGISTRY_IMAGE:$CI_BUILD_REF registry.heroku.com/$HEROKU_STAGING_APP/web
-    - docker push registry.heroku.com/$HEROKU_STAGING_APP/web
+  before_script: *gcloud
+  script: *staging_deploy
   when: manual
   except:
     - master
@@ -106,11 +106,8 @@ deploy to staging:
 deploy to production:
   stage: production
   environment: production
-  script:
-    - docker login --username=_ --password=$HEROKU_AUTH_TOKEN registry.heroku.com
-    - docker pull $CI_REGISTRY_IMAGE:$CI_BUILD_REF
-    - docker tag $CI_REGISTRY_IMAGE:$CI_BUILD_REF registry.heroku.com/$HEROKU_PROD_APP/web
-    - docker push registry.heroku.com/$HEROKU_PROD_APP/web
+  before_script: *gcloud
+  script: *prod_deploy
   when: manual
   only:
     - master
