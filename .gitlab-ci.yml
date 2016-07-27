@@ -71,43 +71,40 @@ release-master:
   - gcloud --quiet container clusters get-credentials $CLUSTER_NAME
 
 .prod_deploy: &prod_deploy
-  - kubectl patch deployment $PRODUCTION_SERVICE_NAME -p '{"spec":{"template":{"spec":{"containers":[{"name":"'"$PRODUCTION_SERVICE_NAME"'","image":"'"$CI_REGISTRY_IMAGE:$CI_BUILD_REF"'"}]}}}}'
+  image: google/cloud-sdk
+  stage: production
+  environment: production
+  before_script: *gcloud
+  script:
+    - kubectl patch deployment $PRODUCTION_SERVICE_NAME -p '{"spec":{"template":{"spec":{"containers":[{"name":"'"$PRODUCTION_SERVICE_NAME"'","image":"'"$CI_REGISTRY_IMAGE:$CI_BUILD_REF"'"}]}}}}'
 
 .staging_deploy: &staging_deploy
-  - kubectl patch deployment $STAGING_SERVICE_NAME -p '{"spec":{"template":{"spec":{"containers":[{"name":"'"$STAGING_SERVICE_NAME"'","image":"'"$CI_REGISTRY_IMAGE:$CI_BUILD_REF"'"}]}}}}'
-
-auto-deploy-master:
   image: google/cloud-sdk
   stage: staging
   environment: staging
   before_script: *gcloud
-  script: *staging_deploy
+  script:
+    - kubectl patch deployment $STAGING_SERVICE_NAME -p '{"spec":{"template":{"spec":{"containers":[{"name":"'"$STAGING_SERVICE_NAME"'","image":"'"$CI_REGISTRY_IMAGE:$CI_BUILD_REF"'"}]}}}}'
+
+auto-deploy-master:
+  <<: *staging_deploy
   only:
     - master
 
 auto-deploy-tags:
-  stage: production
-  environment: production
-  before_script: *gcloud
-  script: *prod_deploy
+  <<: *prod_deploy
   only:
     - tags
 
 deploy to staging:
-  stage: staging
-  environment: staging
-  before_script: *gcloud
-  script: *staging_deploy
+  <<: *staging_deploy
   when: manual
   except:
     - master
     - tags
 
 deploy to production:
-  stage: production
-  environment: production
-  before_script: *gcloud
-  script: *prod_deploy
+  <<: *prod_deploy
   when: manual
   only:
     - master
