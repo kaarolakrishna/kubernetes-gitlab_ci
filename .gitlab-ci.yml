@@ -10,10 +10,6 @@ stages:
   - production
 
 variables:
-  CONTAINER_TEST_IMAGE: $CI_REGISTRY/$CI_USER_OR_GROUP/docker-example:$CI_BUILD_REF
-  CONTAINER_NAMED_IMAGE: $CI_REGISTRY/$CI_USER_OR_GROUP/docker-example:$CI_BUILD_REF_NAME
-  CONTAINER_TAG_IMAGE: $CI_REGISTRY/$CI_USER_OR_GROUP/docker-example:$CI_BUILD_TAG
-  CONTAINER_RELEASE_IMAGE: $CI_REGISTRY/$CI_USER_OR_GROUP/docker-example:latest
   DOCKER_DRIVER: overlay
 
 before_script:
@@ -22,62 +18,56 @@ before_script:
 build:
   stage: build
   script:
-    - docker build --pull -t $CONTAINER_TEST_IMAGE .
-    - docker push $CONTAINER_TEST_IMAGE
+    - docker build --pull -t $CI_REGISTRY_IMAGE:$CI_BUILD_REF .
+    - docker push $CI_REGISTRY_IMAGE:$CI_BUILD_REF
   except:
     - tags
 
 test1:
+  image: $CI_REGISTRY_IMAGE:$CI_BUILD_REF
+  services: []
   stage: test
   script:
-    - docker pull $CONTAINER_TEST_IMAGE
-    - docker run $CONTAINER_TEST_IMAGE echo "test1"
+    - echo "test1"
   except:
     - tags
 
 test2:
+  image: $CI_REGISTRY_IMAGE:$CI_BUILD_REF
+  services: []
   stage: test
   script:
-    - docker pull $CONTAINER_TEST_IMAGE
-    - docker run $CONTAINER_TEST_IMAGE echo "test2"
+    - echo "test2"
   except:
     - tags
 
-release-branch:
+# Non-master branches and tags will be released with :<ref_name> as the tag
+release-by-name:
   stage: release
   script:
-    - docker pull $CONTAINER_TEST_IMAGE
-    - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_NAMED_IMAGE
-    - docker push $CONTAINER_NAMED_IMAGE
+    - docker pull $CI_REGISTRY_IMAGE:$CI_BUILD_REF
+    - docker tag $CI_REGISTRY_IMAGE:$CI_BUILD_REF $CI_REGISTRY_IMAGE:$CI_BUILD_REF_NAME
+    - docker push $CI_REGISTRY_IMAGE:$CI_BUILD_REF
   except:
     - master
-    - tags
 
+# Master will be released with :latest as the tag
 release-master:
   stage: release
   script:
-    - docker pull $CONTAINER_TEST_IMAGE
-    - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_RELEASE_IMAGE
-    - docker push $CONTAINER_RELEASE_IMAGE
+    - docker pull $CI_REGISTRY_IMAGE:$CI_BUILD_REF
+    - docker tag $CI_REGISTRY_IMAGE:$CI_BUILD_REF $CI_REGISTRY_IMAGE:latest
+    - docker push $CI_REGISTRY_IMAGE:latest
   only:
     - master
-
-release-tag:
-  stage: release
-  script:
-    - docker pull $CONTAINER_TEST_IMAGE
-    - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_TAG_IMAGE
-    - docker push $CONTAINER_TAG_IMAGE
-  only:
-    - tags
 
 auto-deploy-master:
   stage: staging
   environment: staging
   script:
     - docker login --username=_ --password=$HEROKU_AUTH_TOKEN registry.heroku.com
-    - docker pull $CONTAINER_TEST_IMAGE
-    - docker tag $CONTAINER_TEST_IMAGE registry.heroku.com/$HEROKU_STAGING_APP/web
+    - docker pull $CI_REGISTRY_IMAGE:$CI_BUILD_REF
+    - docker tag $CI_REGISTRY_IMAGE:$CI_BUILD_REF registry.heroku.com/$HEROKU_STAGING_APP/web
     - docker push registry.heroku.com/$HEROKU_STAGING_APP/web
   only:
     - master
@@ -87,8 +77,8 @@ auto-deploy-tags:
   environment: production
   script:
     - docker login --username=_ --password=$HEROKU_AUTH_TOKEN registry.heroku.com
-    - docker pull $CONTAINER_TEST_IMAGE
-    - docker tag $CONTAINER_TEST_IMAGE registry.heroku.com/$HEROKU_PROD_APP/web
+    - docker pull $CI_REGISTRY_IMAGE:$CI_BUILD_REF
+    - docker tag $CI_REGISTRY_IMAGE:$CI_BUILD_REF registry.heroku.com/$HEROKU_PROD_APP/web
     - docker push registry.heroku.com/$HEROKU_PROD_APP/web
   only:
     - tags
@@ -98,8 +88,8 @@ deploy to staging:
   environment: staging
   script:
     - docker login --username=_ --password=$HEROKU_AUTH_TOKEN registry.heroku.com
-    - docker pull $CONTAINER_TEST_IMAGE
-    - docker tag $CONTAINER_TEST_IMAGE registry.heroku.com/$HEROKU_STAGING_APP/web
+    - docker pull $CI_REGISTRY_IMAGE:$CI_BUILD_REF
+    - docker tag $CI_REGISTRY_IMAGE:$CI_BUILD_REF registry.heroku.com/$HEROKU_STAGING_APP/web
     - docker push registry.heroku.com/$HEROKU_STAGING_APP/web
   when: manual
   except:
@@ -111,8 +101,8 @@ deploy to production:
   environment: production
   script:
     - docker login --username=_ --password=$HEROKU_AUTH_TOKEN registry.heroku.com
-    - docker pull $CONTAINER_TEST_IMAGE
-    - docker tag $CONTAINER_TEST_IMAGE registry.heroku.com/$HEROKU_PROD_APP/web
+    - docker pull $CI_REGISTRY_IMAGE:$CI_BUILD_REF
+    - docker tag $CI_REGISTRY_IMAGE:$CI_BUILD_REF registry.heroku.com/$HEROKU_PROD_APP/web
     - docker push registry.heroku.com/$HEROKU_PROD_APP/web
   when: manual
   only:
