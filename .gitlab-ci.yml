@@ -67,7 +67,7 @@ release-master:
 .gcloud: &gcloud
   - echo $GCLOUD_SERVICE_KEY | base64 --decode -i > ~/gcloud-service-key.json
   - gcloud auth activate-service-account --key-file ~/gcloud-service-key.json
-  - gcloud --quiet container clusters get-credentials $CLUSTER_NAME
+  - gcloud --quiet container clusters get-credentials $CLOUDSDK_CONTAINER_CLUSTER
 
 .prod_deploy: &prod_deploy
   image: google/cloud-sdk
