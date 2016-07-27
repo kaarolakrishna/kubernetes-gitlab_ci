@@ -26,6 +26,7 @@ build:
 test1:
   image: $CI_REGISTRY_IMAGE:$CI_BUILD_REF
   services: []
+  before_script: []
   stage: test
   script:
     - echo "test1"
@@ -35,6 +36,7 @@ test1:
 test2:
   image: $CI_REGISTRY_IMAGE:$CI_BUILD_REF
   services: []
+  before_script: []
   stage: test
   script:
     - echo "test2"
