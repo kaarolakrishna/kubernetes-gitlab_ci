@@ -64,12 +64,10 @@ release-master:
     - master
 
 auto-deploy-master:
+  image: google/cloud-sdk
   stage: staging
   environment: staging
   before_script:
-    - apt-get update && apt-get install google-cloud-sdk
-    - gcloud --quiet components update
-    - gcloud --quiet components update kubectl
     - echo $GCLOUD_SERVICE_KEY | base64 --decode -i > ~/gcloud-service-key.json
     - gcloud auth activate-service-account --key-file ~/gcloud-service-key.json
     - gcloud config set project $PROJECT_NAME
