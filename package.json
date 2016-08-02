@@ -1,7 +1,7 @@
 {
-  "name": "docker-example",
+  "name": "kubernetes-example",
   "version": "1.0.0",
-  "description": "Example app, written in node.js, using Express, built using Docker, deployed to Heroku",
+  "description": "Example app, written in node.js, using Express, built using Docker, deployed using Kubernetes",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -12,20 +12,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@gitlab.com/markpundsack/docker-example.git"
+    "url": "git+ssh://git@gitlab.com/gitlab-examples/kubernetes-example.git"
   },
   "keywords": [
     "docker",
     "node",
-    "heroku",
+    "kubernetes",
     "docker"
   ],
   "author": "Mark Pundsack",
   "license": "MIT",
   "bugs": {
-    "url": "https://gitlab.com/markpundsack/docker-example/issues"
+    "url": "https://gitlab.com/gitlab-examples/kubernetes-example/issues"
   },
-  "homepage": "https://gitlab.com/markpundsack/docker-example",
+  "homepage": "https://gitlab.com/gitlab-examples/kubernetes-example",
   "dependencies": {
     "express": "^4.14.0"
   }
