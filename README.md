@@ -25,8 +25,3 @@ Manual deploy from master branch to production
 
 ## Note
 This requires GitLab Runner using Docker Executor in Privileged mode.
-
-## Access environments
-
-* Production: http://velociraptor.gitlap.com
-* Staging: http://velociraptor-staging.gitlap.com/
